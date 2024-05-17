@@ -11,6 +11,7 @@ import utils
 from dataset import Dataset
 import constants
 import filenames
+from main1 import yolo
 
 
 svm_kernel = cv2.ml.SVM_LINEAR
@@ -21,6 +22,49 @@ import numpy as np
 import utils
 import descriptors
 import filenames
+from collections import Counter
+import re
+import nltk
+from nltk import pos_tag
+
+# Download the NLTK data for POS tagging (if not already downloaded)
+#nltk.download('averaged_perceptron_tagger')
+
+def find_common_noun(input_string):
+    # Check if the input string is a single word
+    if ' ' not in input_string:
+        tagged_word = pos_tag([input_string])
+        if any(tag.startswith('NN') for word, tag in tagged_word):
+            return input_string
+        else:
+            return "No common noun found"
+
+    # Split the input string by commas and whitespace into a list of words
+    words = input_string.split()
+    
+    # Perform POS tagging on the words
+    tagged_words = pos_tag(words)
+    
+    # Filter out words that are not nouns
+    nouns = [word for word, pos in tagged_words if pos.startswith('NN')]
+    
+    # If no nouns are found, return "No common noun found"
+    if not nouns:
+        return "No common noun found"
+    
+    # Return the most common noun
+    return max(nouns, key=nouns.count)
+
+
+
+
+def split(input_string):
+    # Split the string by commas
+    words = input_string.split(',')
+    # Strip any leading/trailing whitespace and return the first word
+    first_word = words[0].strip()
+    return first_word
+
 
 
 def test_one_img_classification(image_path):
@@ -87,6 +131,7 @@ def test_one_image_pretrained(path_image):
     net.setInput(blobfromImage)
     classifications = net.forward()
 
+    #print(classifications)
     min_value, max_value, min_loc, max_loc = cv2.minMaxLoc(classifications)
 
     class_probability = max_value
@@ -94,6 +139,7 @@ def test_one_image_pretrained(path_image):
 
     if class_probability > 0.2:
         label = lines[class_number[0]].strip()
+        print(class_probability)
         
     else:
         label = "unknown"
@@ -104,14 +150,34 @@ def test_one_image_pretrained(path_image):
 
 
 if __name__ == '__main__':
-    image_path1 = "test/test3.jpg"
-
+    image_path1 = "test/sh22.jpg"
+    print(image_path1)
     result1 = test_one_img_classification(image_path1)
     result2 = test_one_image_pretrained(image_path1)
-    
-    # Join the list of predicted classes into a single string
-    result1_str = ", ".join(result1)
-    print("Prediction by Trained Model: " + result1_str)
+    result3 = yolo(image_path1)
 
-    result1_str = "".join(result2)
-    print("Prediction by Pretrained Model: " + result1_str)
+
+    result1_str1 = "".join(result1)
+    result1_str2 = "".join(result2)
+    result1_str3 = str(result3)
+    # Join the list of predicted classes into a single string
+   
+    if result1_str2 == "unknown":
+        if result1_str3 == "None":
+            print("unknown_item")
+        else:
+            result1_str2 = result1_str3
+    else:
+        if result1_str3 == "None":
+            #result1_str3 = split(result1_str2)       
+            result1_str3 = find_common_noun(result1_str2)
+        else:
+            result1_str2 = (result1_str3 +  ", " + result1_str2)
+            result1_str3 =  find_common_noun(result1_str3)
+
+
+    #print("Prediction by Trained Model: " + result1_str1)
+    print("Product Catigoury: " + result1_str3)
+    print("Product Name: " + result1_str2)
+    
+
