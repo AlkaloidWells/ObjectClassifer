@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 
 
+
+
 def get_network(weights, configuration, image):
     network = cv2.dnn.readNet(weights, configuration)
     blob = cv2.dnn.blobFromImage(image, 0.00392, (416, 416))
@@ -72,5 +74,6 @@ def yolo(image_path):
     if count:
         print('Detected:')
     for class_index in count:
+        #print(str(classes[class_index]))
         return str(classes[class_index])
     
